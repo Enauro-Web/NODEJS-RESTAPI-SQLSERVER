@@ -1,9 +1,17 @@
 import { getConnection, sql } from "../database/connection";
+import queries from "../database/queries";
 
 export const getProducts = async (req, res) => {
-    const pool = await getConnection();
-    const result = await pool.request().query("SELECT * FROM Products");
-    res.json(result.recordset);
+
+    try{
+        const pool = await getConnection();
+        const result = await pool.request().query(queries.getAllProducts);
+        res.json(result.recordset);
+    } catch (error) {
+        res.status(500);
+        res.send(error.message);
+    }
+    
 }
 
 export const addProduct = async (req, res) => {    
@@ -17,27 +25,68 @@ export const addProduct = async (req, res) => {
         return res.status(400).json({msg: 'Bad Request. Please fill all fields'});
     }
 
-    const pool = await getConnection();
-    const result = await pool.request()
-    .input('name',sql.VarChar, name)
-    .input('description',sql.Text, description)
-    .input('quantity',sql.Int, quantity)
-    .query(`INSERT INTO Products VALUES (@name,@description,@quantity)`);
+    try{
+        const pool = await getConnection();
+        const result = await pool.request()
+        .input('name',sql.VarChar, name)
+        .input('description',sql.Text, description)
+        .input('quantity',sql.Int, quantity)
+        .query(queries.addNewProduct);
 
-    console.log(req.body);
-    res.json(result);
+        console.log(req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500);
+        res.send(error.message);
+    }
 }
 
 export const getSingleProduct = async (req, res) => {
-    res.json('getSingleProduct')
+    const {id} = req.params;
+    try{
+        const pool = await getConnection();
+        const result = await pool.request()
+        .input('id',sql.Int, id)        
+        .query(queries.getSingleProduct);
+        res.json(result.recordset);
+    } catch (error) {
+        res.status(500);
+        res.send(error.message);
+    }
 }
 
 export const editProduct = async (req, res) => {
-    res.json('editProduct')
+    const {id} = req.params;
+    const {name,description,quantity} = req.body;
+    try{
+        const pool = await getConnection();
+        const result = await pool.request()
+        .input('id',sql.Int, id)
+        .input('name',sql.VarChar, name)
+        .input('description',sql.Text, description)
+        .input('quantity',sql.Int, quantity)    
+        .query(queries.updateProduct);
+        res.status(200);
+        res.send("Product Updated");
+    } catch (error) {
+        res.status(500);
+        res.send(error.message);
+    }
 }
 
 export const deleteProduct = async (req, res) => {
-    res.json('deleteProduct')
+    const {id} = req.params;
+    try{
+        const pool = await getConnection();
+        const result = await pool.request()
+        .input('id',sql.Int, id)        
+        .query(queries.deleteProduct);
+        res.status(200);
+        res.send("Product Deleted");
+    } catch (error) {
+        res.status(500);
+        res.send(error.message);
+    }
 }
 
 
